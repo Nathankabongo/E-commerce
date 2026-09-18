@@ -10,6 +10,10 @@ Boutique e-commerce avec authentification et panier sécurisés
 2. **LOSONGO KINGOMBE VICTOR** — Backend & authentification
 3. **JULIETTE** — E-commerce & panier
 
+### 🔗 Liens du projet (Livrables)
+- **URL Publique du Site (Déployé)** : [https://secureecommerce.vercel.app/](https://secureecommerce.vercel.app/)
+- **URL du Dépôt GitHub** : [https://github.com/Nathankabongo/E-commerce](https://github.com/Nathankabongo/E-commerce)
+
 ---
 
 ## 1. Objectifs
