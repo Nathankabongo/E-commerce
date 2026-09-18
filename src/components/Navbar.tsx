@@ -1,35 +1,10 @@
 'use client';
 import Link from 'next/link';
-import { ShoppingCart, User, LogOut, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { ShoppingCart, User, LogOut, ShieldCheck, Package } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
-  const [user, setUser] = useState<{name: string, email: string} | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) setUser(data.user);
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1] || '';
-      await fetch('/api/auth/logout', { 
-        method: 'POST',
-        headers: { 'x-csrf-token': csrfToken }
-      });
-      setUser(null);
-      router.push('/');
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const { user, logout } = useAuth();
 
   return (
     <nav className="navbar">
@@ -46,17 +21,26 @@ export default function Navbar() {
         
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '1px solid var(--card-border)', paddingLeft: '1rem', marginLeft: '0.5rem' }}>
+            <Link href="/orders" className="nav-link" aria-label="Commandes">
+              <Package size={22} />
+              <span>Commandes</span>
+            </Link>
             <span style={{color: 'var(--accent)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
               <User size={18} /> {user.name}
             </span>
-            <button onClick={handleLogout} className="btn btn-danger" style={{ padding: '0.4rem 0.8rem' }}>
+            <button onClick={logout} className="btn btn-danger" style={{ padding: '0.4rem 0.8rem' }}>
               <LogOut size={16} /> 
             </button>
           </div>
         ) : (
-          <Link href="/login" className="btn btn-glow">
-            <User size={18} /> Connexion
-          </Link>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Link href="/login" className="btn btn-glow">
+              Connexion
+            </Link>
+            <Link href="/register" className="btn btn-secondary">
+              Inscription
+            </Link>
+          </div>
         )}
       </div>
     </nav>

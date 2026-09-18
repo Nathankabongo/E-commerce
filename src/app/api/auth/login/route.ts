@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { signJwtToken } from '@/lib/auth';
-
-const MOCK_USER = {
-  email: 'demo@example.com',
-  password: 'Password123!', // Do not store plain text in real app
-  id: 'usr_123',
-  name: 'Demo User'
-};
+import { users } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,10 +12,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
-    if (email === MOCK_USER.email && password === MOCK_USER.password) {
-      const token = await signJwtToken({ id: MOCK_USER.id, name: MOCK_USER.name, email });
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if (user) {
+      const token = await signJwtToken({ id: user.id, name: user.name, email });
       
-      const response = NextResponse.json({ success: true, user: { name: MOCK_USER.name, email } });
+      const response = NextResponse.json({ success: true, user: { name: user.name, email } });
       
       // Setting Secure, HttpOnly, SameSite cookies
       response.cookies.set({

@@ -1,32 +1,46 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, AlertTriangle } from 'lucide-react';
+import { User, Lock, Mail, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
-export default function Login() {
-  const [email, setEmail] = useState('demo@example.com');
-  const [password, setPassword] = useState('Password123!');
+export default function Register() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+
     setLoading(true);
     
     try {
-      // In a real app, CSRF header is needed for login too
-      const res = await fetch('/api/auth/login', {
+      const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1] || '';
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
+        body: JSON.stringify({ name, email, password })
       });
 
       if (res.ok) {
-        window.location.href = '/';
+        await refreshUser();
+        router.push('/');
       } else {
-        setError("Identifiants invalides ou erreur système.");
+        const data = await res.json();
+        setError(data.error || "Erreur lors de l'inscription.");
       }
     } catch (err) {
       setError("Une erreur inattendue s'est produite.");
@@ -34,21 +48,16 @@ export default function Login() {
       setLoading(false);
     }
   };
-  
-  const handleOAuth = () => {
-    // Simulate OAuth redirect
-    window.location.href = '/api/auth/github';
-  };
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
       <div className="form-container">
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ background: 'rgba(139, 92, 246, 0.1)', width: '4rem', height: '4rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
-            <Lock color="var(--primary)" size={28} />
+            <ShieldCheck color="var(--primary)" size={28} />
           </div>
-          <h1 style={{ fontSize: '1.8rem' }}>Connexion Sécurisée</h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Accédez à votre espace E-commerce</p>
+          <h1 style={{ fontSize: '1.8rem' }}>Créer un compte</h1>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Rejoignez notre plateforme sécurisée</p>
         </div>
 
         {error && (
@@ -58,7 +67,23 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleRegister}>
+          <div className="form-group">
+            <label htmlFor="name">Nom complet</label>
+            <div style={{ position: 'relative' }}>
+              <User size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+              <input 
+                type="text" 
+                id="name" 
+                className="form-input" 
+                style={{ width: '100%', paddingLeft: '3rem' }}
+                value={name} 
+                onChange={e => setName(e.target.value)} 
+                required 
+              />
+            </div>
+          </div>
+
           <div className="form-group">
             <label htmlFor="email">Adresse Email</label>
             <div style={{ position: 'relative' }}>
@@ -89,23 +114,15 @@ export default function Login() {
                 required 
               />
             </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+              Le mot de passe doit contenir au moins 8 caractères.
+            </p>
           </div>
           
           <button type="submit" className="btn btn-glow" style={{ width: '100%', marginTop: '1.5rem', padding: '0.8rem' }} disabled={loading}>
-            {loading ? 'Vérification...' : 'Se connecter'}
+            {loading ? 'Création en cours...' : 'S\'inscrire'}
           </button>
         </form>
-
-        <div style={{ display: 'flex', alignItems: 'center', margin: '2rem 0', color: 'var(--text-muted)' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--card-border)' }}></div>
-          <span style={{ margin: '0 1rem', fontSize: '0.9rem' }}>OU</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--card-border)' }}></div>
-        </div>
-
-        <button onClick={handleOAuth} className="btn btn-secondary" style={{ width: '100%', padding: '0.8rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-          Se connecter avec GitHub
-        </button>
       </div>
     </div>
   );
