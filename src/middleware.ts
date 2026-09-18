@@ -44,7 +44,6 @@ export async function middleware(request: NextRequest) {
 
   // Ensure CSRF cookie exists
   if (!request.cookies.has('csrf_token')) {
-    const crypto = require('crypto');
     const newCsrf = crypto.randomUUID();
     response.cookies.set({
       name: 'csrf_token',
